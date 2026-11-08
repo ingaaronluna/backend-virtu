@@ -1,0 +1,320 @@
+// Prisma Schema para Virtu API
+// Documentación: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum Rol {
+  ESTUDIANTE
+  DOCENTE
+}
+
+enum EstadoLeccion {
+  PENDIENTE
+  ESTUDIADO
+}
+
+// ==========================================
+// 1. MÓDULO DE USUARIOS, ROLES Y CURSOS
+// ==========================================
+
+model Colegio {
+  id       Int      @id @default(autoincrement())
+  nombre   String   @db.VarChar(150)
+  creadoEn DateTime @default(now()) @map("creado_en")
+
+  cursos   Curso[]
+  usuarios Usuario[]
+
+  @@map("colegios")
+}
+
+model Curso {
+  id        Int    @id @default(autoincrement())
+  nombre    String @db.VarChar(100)
+  colegioId Int    @map("colegio_id")
+
+  colegio     Colegio        @relation(fields: [colegioId], references: [id], onDelete: Cascade)
+  estudiantes Usuario[]      @relation("EstudiantesDelCurso")
+  docentes    DocenteCurso[]
+
+  @@map("cursos")
+}
+
+model Usuario {
+  id             Int      @id @default(autoincrement())
+  username       String   @unique @db.VarChar(50)
+  password       String   @db.VarChar(255)
+  nombreCompleto String   @map("nombre_completo") @db.VarChar(150)
+  rol            Rol      @default(ESTUDIANTE)
+  cursoId        Int?     @map("curso_id")
+  colegioId      Int      @map("colegio_id")
+  activo         Boolean  @default(true)
+  creadoEn       DateTime @default(now()) @map("creado_en")
+
+  curso   Curso?  @relation("EstudiantesDelCurso", fields: [cursoId], references: [id], onDelete: SetNull)
+  colegio Colegio @relation(fields: [colegioId], references: [id], onDelete: Restrict)
+
+  cursosDocente DocenteCurso[]
+  intentos      IntentoCuestionario[]
+  progresos     ProgresoLeccion[]
+
+  @@map("usuarios")
+}
+
+model DocenteCurso {
+  docenteId Int @map("docente_id")
+  cursoId   Int @map("curso_id")
+
+  docente Usuario @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+  curso   Curso   @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+
+  @@id([docenteId, cursoId])
+  @@map("docentes_cursos")
+}
+
+// ==========================================
+// 2. MÓDULO DE CONTENIDOS ACADÉMICOS
+// ==========================================
+
+model Contenido {
+  id             Int     @id @default(autoincrement())
+  nombre         String  @db.VarChar(50)
+  slug           String  @unique @db.VarChar(50)
+  resumen        String  @db.Text
+  estaHabilitado Boolean @default(true) @map("esta_habilitado")
+  orden          Int     @default(0)
+
+  unidades Unidad[]
+
+  // Relaciones con los Glosarios Modulares
+  glosarioHistoria GlosarioHistoria[]
+  glosarioFisica   GlosarioFisica[]
+  glosarioIngles   GlosarioIngles[]
+  glosarioBiologia GlosarioBiologia[]
+  glosarioCalculo  GlosarioCalculo[]
+  glosarioQuimica  GlosarioQuimica[]
+
+  @@map("contenidos")
+}
+
+model Unidad {
+  id          Int     @id @default(autoincrement())
+  contenidoId Int     @map("contenido_id")
+  titulo      String  @db.VarChar(150)
+  descripcion String? @db.Text
+  orden       Int     @default(0)
+
+  contenido Contenido @relation(fields: [contenidoId], references: [id], onDelete: Cascade)
+  lecciones Leccion[]
+
+  @@map("unidades")
+}
+
+model Leccion {
+  id         Int    @id @default(autoincrement())
+  unidadId   Int    @map("unidad_id")
+  titulo     String @db.VarChar(150)
+  definicion String @db.Text
+  ejemplo    String @db.VarChar(2000)
+  orden      Int    @default(0)
+
+  unidad       Unidad            @relation(fields: [unidadId], references: [id], onDelete: Cascade)
+  cuestionario Cuestionario?
+  progresos    ProgresoLeccion[]
+
+  @@map("lecciones")
+}
+
+// ==========================================
+// 3. MÓDULO DE CUESTIONARIOS Y EVALUACIONES
+// ==========================================
+
+model Cuestionario {
+  id                   Int     @id @default(autoincrement())
+  leccionId            Int     @unique @map("leccion_id")
+  tiempoLimiteSegundos Int     @default(300) @map("tiempo_limite_segundos")
+  activo               Boolean @default(true)
+
+  leccion   Leccion               @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  preguntas Pregunta[]
+  intentos  IntentoCuestionario[]
+
+  @@map("cuestionarios")
+}
+
+model Pregunta {
+  id             Int    @id @default(autoincrement())
+  cuestionarioId Int    @map("cuestionario_id")
+  enunciado      String @db.Text
+  orden          Int    @default(1)
+
+  cuestionario         Cuestionario          @relation(fields: [cuestionarioId], references: [id], onDelete: Cascade)
+  opciones             OpcionRespuesta[]
+  respuestasEstudiante RespuestaEstudiante[]
+
+  @@map("preguntas")
+}
+
+model OpcionRespuesta {
+  id          Int     @id @default(autoincrement())
+  preguntaId  Int     @map("pregunta_id")
+  texto       String  @db.Text
+  esCorrecta  Boolean @default(false) @map("es_correcta")
+  explicacion String? @db.Text
+
+  pregunta             Pregunta              @relation(fields: [preguntaId], references: [id], onDelete: Cascade)
+  respuestasEstudiante RespuestaEstudiante[]
+
+  @@map("opciones_respuesta")
+}
+
+model IntentoCuestionario {
+  id             Int      @id @default(autoincrement())
+  estudianteId   Int      @map("estudiante_id")
+  cuestionarioId Int      @map("cuestionario_id")
+  numeroIntento  Int      @default(1) @map("numero_intento")
+  aciertos       Int      @default(0)
+  calificacion   Decimal  @default(0.00) @db.Decimal(4, 2)
+  aprobado       Boolean  @default(false)
+  esNotaVigente  Boolean  @default(true) @map("es_nota_vigente")
+  fechaEjecucion DateTime @default(now()) @map("fecha_ejecucion")
+
+  estudiante   Usuario               @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  cuestionario Cuestionario          @relation(fields: [cuestionarioId], references: [id], onDelete: Cascade)
+  respuestas   RespuestaEstudiante[]
+
+  @@map("intentos_cuestionario")
+}
+
+model RespuestaEstudiante {
+  id                   Int      @id @default(autoincrement())
+  intentoId            Int      @map("intento_id")
+  preguntaId           Int      @map("pregunta_id")
+  opcionSeleccionadaId Int      @map("opcion_seleccionada_id")
+  esCorrecta           Boolean  @map("es_correcta")
+  respondidoEn         DateTime @default(now()) @map("respondido_en")
+
+  intento            IntentoCuestionario @relation(fields: [intentoId], references: [id], onDelete: Cascade)
+  pregunta           Pregunta            @relation(fields: [preguntaId], references: [id], onDelete: Cascade)
+  opcionSeleccionada OpcionRespuesta     @relation(fields: [opcionSeleccionadaId], references: [id], onDelete: Cascade)
+
+  @@map("respuestas_estudiante")
+}
+
+// ==========================================
+// 4. MÓDULO DE PROGRESO DEL ESTUDIANTE
+// ==========================================
+
+model ProgresoLeccion {
+  id              Int           @id @default(autoincrement())
+  estudianteId    Int           @map("estudiante_id")
+  leccionId       Int           @map("leccion_id")
+  estado          EstadoLeccion @default(PENDIENTE)
+  fechaCompletado DateTime?     @map("fecha_completado")
+
+  estudiante Usuario @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  leccion    Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+
+  @@unique([estudianteId, leccionId])
+  @@map("progreso_lecciones")
+}
+
+// ==========================================
+// 5. MÓDULO DE GLOSARIOS MODULARES
+// ==========================================
+
+model GlosarioHistoria {
+  id               Int     @id @default(autoincrement())
+  contenidoId      Int     @map("contenido_id")
+  tematica         String  @db.VarChar(150)
+  datoHistorico    String  @map("dato_historico") @db.Text
+  definicion       String  @db.Text
+  lineaTiempo      String  @map("linea_tiempo") @db.VarChar(150)
+  esPersonaje      Boolean @default(false) @map("es_personaje")
+  fechaHistorica   String  @map("fecha_historica") @db.VarChar(100)
+  ordenCronologico Int     @default(0) @map("orden_cronologico")
+
+  contenido Contenido @relation(fields: [contenidoId], references: [id], onDelete: Cascade)
+
+  @@map("glosario_historia")
+}
+
+model GlosarioFisica {
+  id          Int    @id @default(autoincrement())
+  contenidoId Int    @map("contenido_id")
+  tematica    String @db.VarChar(150)
+  concepto    String @db.VarChar(150)
+  definicion  String @db.Text
+  linkVideo   String @map("link_video") @db.VarChar(500)
+
+  contenido Contenido @relation(fields: [contenidoId], references: [id], onDelete: Cascade)
+
+  @@map("glosario_fisica")
+}
+
+model GlosarioIngles {
+  id            Int     @id @default(autoincrement())
+  contenidoId   Int     @map("contenido_id")
+  palabra       String  @db.VarChar(100)
+  definicion    String  @db.Text
+  pronunciacion String  @db.VarChar(150)
+  tiempoVerbal  String? @map("tiempo_verbal") @db.VarChar(100)
+  linkAudio     String  @map("link_audio") @db.VarChar(500)
+  ejemplo       String  @db.Text
+
+  contenido Contenido @relation(fields: [contenidoId], references: [id], onDelete: Cascade)
+
+  @@map("glosario_ingles")
+}
+
+model GlosarioBiologia {
+  id          Int     @id @default(autoincrement())
+  contenidoId Int     @map("contenido_id")
+  tematica    String  @db.VarChar(150)
+  concepto    String  @db.VarChar(150)
+  definicion  String  @db.Text
+  esFlashcard Boolean @default(true) @map("es_flashcard")
+
+  contenido Contenido @relation(fields: [contenidoId], references: [id], onDelete: Cascade)
+
+  @@map("glosario_biologia")
+}
+
+model GlosarioCalculo {
+  id            Int    @id @default(autoincrement())
+  contenidoId   Int    @map("contenido_id")
+  tematica      String @db.VarChar(150)
+  titulo        String @db.VarChar(150)
+  definicion    String @db.Text
+  renderizacion String @db.Text
+
+  contenido Contenido @relation(fields: [contenidoId], references: [id], onDelete: Cascade)
+
+  @@map("glosario_calculo")
+}
+
+model GlosarioQuimica {
+  id              Int    @id @default(autoincrement())
+  contenidoId     Int    @map("contenido_id")
+  elementoQuimico String @map("elemento_quimico") @db.VarChar(100)
+  nombre          String @db.VarChar(100)
+  simbolo         String @db.VarChar(10)
+  numeroAtomico   Int    @map("numero_atomico")
+  clasificacion   String @db.VarChar(100)
+  formulaEjemplo  String @map("formula_ejemplo") @db.VarChar(200)
+
+  contenido Contenido @relation(fields: [contenidoId], references: [id], onDelete: Cascade)
+
+  @@map("glosario_quimica")
+}
