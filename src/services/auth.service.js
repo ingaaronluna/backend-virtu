@@ -167,6 +167,9 @@ export const register = async ({
         cursosDocente: { include: { curso: true } }
       }
     });
+  }, {
+    maxWait: 10000,
+    timeout: 20000
   });
 
   return formatUserProfile(newUser);

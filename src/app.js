@@ -15,13 +15,30 @@ app.get('/', (req, res) => {
     status: 'success',
     project: 'Virtu API',
     description: 'Backend para plataforma educativa Virtu',
-    version: '1.0.0',
+    version: '1.1.0',
     endpoints: {
       health: '/api/health',
       auth: {
         login: 'POST /api/auth/login',
         me: 'GET /api/auth/me',
         register: 'POST /api/auth/register'
+      },
+      contenidos: {
+        listar: 'GET /api/contenidos',
+        detallePorSlug: 'GET /api/contenidos/:slug'
+      },
+      lecciones: {
+        detalle: 'GET /api/lecciones/:id',
+        marcarEstudiadoManual: 'POST /api/lecciones/:id/marcar-estudiado'
+      },
+      cuestionarios: {
+        iniciarIntento: 'POST /api/cuestionarios/:id/iniciar',
+        responderSecuencial: 'POST /api/intentos/:id/responder',
+        finalizarIntento: 'POST /api/intentos/:id/finalizar',
+        historialEstudiante: 'GET /api/cuestionarios/:id/historial'
+      },
+      estudiantes: {
+        progresoGlobal: 'GET /api/estudiantes/progreso'
       }
     }
   });
