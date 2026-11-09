@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
 import apiRoutes from './routes/index.js';
 import { errorHandler } from './middlewares/error.middleware.js';
+import { swaggerDocument } from './docs/swagger.js';
 
 const app = express();
 
@@ -9,13 +11,31 @@ const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
+// Documentación interactiva Swagger UI en /docs y /api/docs
+const swaggerOptions = {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Virtu API Docs'
+};
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
+
+// Endpoint para descargar o consultar el esquema OpenAPI en JSON
+app.get('/api/docs-json', (req, res) => {
+  res.json(swaggerDocument);
+});
+
 // Ruta raíz informativa
 app.get('/', (req, res) => {
   res.json({
     status: 'success',
     project: 'Virtu API',
     description: 'Backend para plataforma educativa Virtu',
-    version: '1.1.0',
+    version: '1.2.0',
+    documentation: {
+      swaggerUI: '/docs',
+      openApiJson: '/api/docs-json'
+    },
     endpoints: {
       health: '/api/health',
       auth: {
@@ -39,6 +59,15 @@ app.get('/', (req, res) => {
       },
       estudiantes: {
         progresoGlobal: 'GET /api/estudiantes/progreso'
+      },
+      glosarios: {
+        porMateria: 'GET /api/glosarios/:materia?q=',
+        lineaTiempoHistoria: 'GET /api/glosarios/historia/linea-tiempo/:id'
+      },
+      docente: {
+        cursos: 'GET /api/docente/cursos',
+        estudiantesCurso: 'GET /api/docente/cursos/:cursoId/estudiantes',
+        aciertosDesaciertosAlumno: 'GET /api/docente/estudiantes/:estudianteId/lecciones/:leccionId'
       }
     }
   });

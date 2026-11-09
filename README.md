@@ -1,6 +1,22 @@
 # Virtu - Backend API
 
-Backend en Node.js + Express + Prisma ORM + MySQL para la plataforma educativa **Virtu**.
+Backend en Node.js + Express + Prisma ORM + MySQL (TiDB Cloud) para la plataforma educativa **Virtu**.
+
+---
+
+## 🌐 Despliegue en Vivo y Documentación Interactiva
+
+* **API en Producción (Render):** `https://backend-virtu.onrender.com`
+* **Swagger UI (Documentación Interactiva):** 👉 **[https://backend-virtu.onrender.com/docs](https://backend-virtu.onrender.com/docs)**
+* **OpenAPI Spec (JSON):** `https://backend-virtu.onrender.com/api/docs-json`
+
+> **Instrucciones para probar con Swagger:**
+> 1. Haz clic en el endpoint `POST /api/auth/login` e ingresa:
+>    * Estudiante: `alumno1` / `Estudiante123!`
+>    * Docente: `profesor1` / `Docente123!`
+> 2. Copia el `token` devuelto.
+> 3. Haz clic en el botón verde **Authorize** (arriba a la derecha), pega el token y haz clic en **Authorize**.
+> 4. ¡Listo! Puedes probar todos los endpoints protegidos directamente desde tu navegador.
 
 ---
 
@@ -10,125 +26,67 @@ Backend en Node.js + Express + Prisma ORM + MySQL para la plataforma educativa *
 backend-virtu/
 ├── prisma/
 │   ├── schema.prisma          # Esquema relacional MySQL (Modelos Core y Glosarios)
-│   └── seed.js                # Script de poblamiento inicial de datos
+│   └── seed.js                # Script de poblamiento inicial de datos en TiDB Cloud
 ├── src/
 │   ├── config/
-│   │   └── db.js              # Instancia única del cliente Prisma
+│   │   └── db.js              # Instancia del cliente Prisma
 │   ├── controllers/
-│   │   └── auth.controller.js # Controladores de inicio de sesión y perfil
+│   │   ├── auth.controller.js         # Controladores de inicio de sesión y perfil
+│   │   ├── contenido.controller.js    # Controladores de materias y lecciones
+│   │   ├── cuestionario.controller.js # Controladores de evaluación wizard
+│   │   ├── progreso.controller.js     # Controladores de progreso de estudiantes
+│   │   ├── glosario.controller.js     # Controladores de glosarios modulares
+│   │   └── docente.controller.js      # Controladores de panel docente (solo lectura)
+│   ├── docs/
+│   │   └── swagger.js         # Especificación OpenAPI 3.0 / Swagger UI
 │   ├── middlewares/
 │   │   ├── auth.middleware.js # Validación de Token JWT y extracción de usuario
 │   │   ├── role.middleware.js # Control de acceso por rol (ESTUDIANTE / DOCENTE)
 │   │   └── error.middleware.js# Manejador centralizado de errores
 │   ├── routes/
-│   │   ├── auth.routes.js     # Endpoints de autenticación (/api/auth)
-│   │   └── index.js           # Enrutador principal de la API
+│   │   ├── auth.routes.js         # /api/auth
+│   │   ├── contenido.routes.js    # /api/contenidos
+│   │   ├── leccion.routes.js      # /api/lecciones
+│   │   ├── cuestionario.routes.js # /api/cuestionarios e /api/intentos
+│   │   ├── estudiante.routes.js   # /api/estudiantes
+│   │   ├── glosario.routes.js     # /api/glosarios
+│   │   ├── docente.routes.js      # /api/docente
+│   │   └── index.js               # Enrutador principal de la API (/api)
 │   ├── services/
-│   │   └── auth.service.js    # Lógica de negocio y consultas a base de datos
-│   ├── app.js                 # Configuración de Express, CORS y middlewares
+│   │   ├── auth.service.js
+│   │   ├── contenido.service.js
+│   │   ├── cuestionario.service.js
+│   │   ├── progreso.service.js
+│   │   ├── glosario.service.js
+│   │   └── docente.service.js
+│   ├── app.js                 # Express, CORS, Swagger UI y middlewares
 │   └── index.js               # Punto de entrada del servidor HTTP
-├── .env.example               # Plantilla de variables de entorno
+├── API_ENDPOINTS_VIRTU.md     # Contrato técnico para el equipo frontend
+├── .env.example
 ├── package.json
 └── README.md
 ```
 
 ---
 
-## 🚀 Puesta en Marcha Local
+## 📡 Tabla General de Endpoints
 
-### 1. Variables de Entorno
-Copia el archivo `.env.example` a `.env`:
-```bash
-cp .env.example .env
-```
-Asegúrate de configurar tu cadena de conexión `DATABASE_URL` hacia tu base de datos MySQL (local o Railway).
-
-### 2. Generar el Cliente Prisma y Migraciones
-```bash
-npm run prisma:generate
-npm run prisma:migrate
-```
-
-### 3. Cargar Datos Iniciales (Seed)
-```bash
-npm run seed
-```
-> Esto cargará:
-> - **1 Colegio** (*Colegio Virtu Central*)
-> - **2 Cursos** (*4to Medio A*, *4to Medio B*)
-> - **2 Usuarios de Prueba**:
->   - **Docente:** `profesor1` / `Docente123!` (asignado a ambos cursos)
->   - **Estudiante:** `alumno1` / `Estudiante123!` (asignado a 4to Medio A)
-> - **Las 6 Materias Core**: Biología, Cálculo, Física, Química, Inglés e Historia.
-> - **Unidades y Lecciones de muestra**.
-> - **1 Cuestionario de 5 preguntas** de opción múltiple (Historia) con retroalimentación inmediata.
-> - **Glosarios modulares** para cada materia (Flashcards, Fórmulas LaTeX, Videos, Audios, etc.).
-
-### 4. Iniciar el Servidor
-```bash
-# Modo desarrollo con recarga automática
-npm run dev
-
-# Modo producción
-npm start
-```
-
----
-
-## 📖 Documentación Completa de la API
-
-Para el equipo de Frontend y estudiantes que consumirán esta API, consulta la especificación completa en:
-👉 **[API_ENDPOINTS_VIRTU.md](API_ENDPOINTS_VIRTU.md)**
-
-Contiene:
-- Todos los endpoints con métodos HTTP, URLs, payloads de entrada y salida JSON.
-- Explicación detallada de cómo interactúa cada endpoint con las tablas de MySQL.
-- Reglas de negocio (límite de caracteres, notas vigentes, aprobación con 4/5, inmutabilidad de respuestas, avance de unidades).
-- Diagramas de secuencia del wizard de preguntas.
-
----
-
-## 📡 Endpoints Disponibles
-
-### Autenticación y Perfil (`/api/auth`)
-
-| Método | Endpoint | Descripción | Requiere Auth |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/api/auth/login` | Inicia sesión con `username` y `password` | No |
-| `POST` | `/api/auth/register`| Registra un nuevo estudiante o docente | No |
-| `GET` | `/api/auth/me` | Obtiene los datos del usuario logueado según su rol | **Sí (Bearer Token)** |
-
-#### Formato de Respuesta para `GET /api/auth/me`:
-
-**Para Estudiantes (1 curso):**
-```json
-{
-  "status": "success",
-  "data": {
-    "id": 2,
-    "username": "alumno1",
-    "nombreCompleto": "Sofía Valenzuela",
-    "rol": "ESTUDIANTE",
-    "colegio": { "id": 1, "nombre": "Colegio Virtu Central" },
-    "curso": { "id": 1, "nombre": "4to Medio A" }
-  }
-}
-```
-
-**Para Docentes (Múltiples cursos):**
-```json
-{
-  "status": "success",
-  "data": {
-    "id": 1,
-    "username": "profesor1",
-    "nombreCompleto": "Prof. Carlos Mendoza",
-    "rol": "DOCENTE",
-    "colegio": { "id": 1, "nombre": "Colegio Virtu Central" },
-    "cursos": [
-      { "id": 1, "nombre": "4to Medio A" },
-      { "id": 2, "nombre": "4to Medio B" }
-    ]
-  }
-}
-```
+| Módulo | Método | Endpoint | Descripción | Rol Requerido |
+| :--- | :---: | :--- | :--- | :---: |
+| **Auth** | `POST` | `/api/auth/login` | Inicia sesión con `username` y `password` | Público |
+| **Auth** | `POST` | `/api/auth/register` | Registro de nuevos usuarios | Público |
+| **Auth** | `GET` | `/api/auth/me` | Datos del usuario según rol (1 curso vs N cursos) | Token |
+| **Contenidos** | `GET` | `/api/contenidos` | Listado de materias habilitadas | Token |
+| **Contenidos** | `GET` | `/api/contenidos/:slug` | Materia con unidades, lecciones y progreso | Token |
+| **Lecciones** | `GET` | `/api/lecciones/:id` | Definición (10k chars), ejemplo (2k chars) | Token |
+| **Progreso** | `POST` | `/api/lecciones/:id/marcar-estudiado` | Marca lección manual (SOLO si no tiene cuestionario) | Estudiante |
+| **Cuestionarios** | `POST` | `/api/cuestionarios/:id/iniciar` | Inicia intento (5 preguntas, 4 opciones) | Estudiante |
+| **Cuestionarios** | `POST` | `/api/intentos/:id/responder` | Envía respuesta secuencial (inmutable + corrección inmediata) | Estudiante |
+| **Cuestionarios** | `POST` | `/api/intentos/:id/finalizar` | Finaliza, calcula nota (>= 4/5 aprueba y marca lección) | Estudiante |
+| **Cuestionarios** | `GET` | `/api/cuestionarios/:id/historial` | Histórico de intentos del alumno | Estudiante |
+| **Progreso** | `GET` | `/api/estudiantes/progreso` | Porcentaje global de avance del estudiante | Estudiante |
+| **Glosarios** | `GET` | `/api/glosarios/:materia` | Listar o buscar (`?q=...`) en glosario modular | Token |
+| **Glosarios** | `GET` | `/api/glosarios/historia/linea-tiempo/:id` | Hito actual + 2 anteriores y 2 posteriores | Token |
+| **Docente** | `GET` | `/api/docente/cursos` | Lista de cursos asignados al docente | Docente |
+| **Docente** | `GET` | `/api/docente/cursos/:id/estudiantes` | Lista de alumnos con % de avance de Unidades | Docente |
+| **Docente** | `GET` | `/api/docente/estudiantes/:id/lecciones/:id` | Aciertos y desaciertos por lección y alumno | Docente |
