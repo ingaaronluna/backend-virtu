@@ -90,3 +90,15 @@ backend-virtu/
 | **Docente** | `GET` | `/api/docente/cursos` | Lista de cursos asignados al docente | Docente |
 | **Docente** | `GET` | `/api/docente/cursos/:id/estudiantes` | Lista de alumnos con % de avance de Unidades | Docente |
 | **Docente** | `GET` | `/api/docente/estudiantes/:id/lecciones/:id` | Aciertos y desaciertos por lección y alumno | Docente |
+| **Admin CRUD** | `GET / POST` | `/api/admin/colegios` | Listar y crear colegios | Docente |
+| **Admin CRUD** | `PUT / DELETE` | `/api/admin/colegios/:id` | Actualizar y eliminar colegio | Docente |
+| **Admin CRUD** | `GET / POST` | `/api/admin/cursos` | Listar y crear cursos | Docente |
+| **Admin CRUD** | `PUT / DELETE` | `/api/admin/cursos/:id` | Actualizar y eliminar curso | Docente |
+| **Admin CRUD** | `POST` | `/api/admin/contenidos` | Crear nueva materia | Docente |
+| **Admin CRUD** | `PUT / DELETE` | `/api/admin/contenidos/:id` | Actualizar (habilitar/deshabilitar) y eliminar materia | Docente |
+| **Admin CRUD** | `POST / PUT / DELETE` | `/api/admin/unidades` | Mantenedor de Unidades de Estudio | Docente |
+| **Admin CRUD** | `POST / PUT / DELETE` | `/api/admin/lecciones` | Mantenedor de Lecciones (teoría y ejemplos) | Docente |
+| **Admin CRUD** | `POST` | `/api/admin/cuestionarios` | Crear cuestionario para una lección | Docente |
+| **Admin CRUD** | `POST` | `/api/admin/cuestionarios/:id/preguntas` | Agregar pregunta con 4 opciones | Docente |
+| **Admin CRUD** | `DELETE` | `/api/admin/preguntas/:id` | Eliminar pregunta | Docente |
+| **Admin CRUD** | `POST / DELETE` | `/api/admin/glosarios/:materia` | Mantenedor de Glosarios Modulares | Docente |

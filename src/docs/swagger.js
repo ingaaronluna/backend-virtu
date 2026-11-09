@@ -1114,6 +1114,479 @@ Permite al docente auditar el rendimiento exacto de un alumno en una lección es
           }
         }
       }
+    },
+
+    // ==========================================
+    // 7. ADMINISTRACIÓN DE BASE DE DATOS (CRUDs)
+    // ==========================================
+    '/admin/colegios': {
+      get: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Listar todos los colegios registrados',
+        description: 'Obtiene todos los colegios con el conteo de cursos y usuarios asociados. Requiere rol DOCENTE.',
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Lista de colegios.',
+            content: {
+              'application/json': {
+                example: {
+                  status: 'success',
+                  data: [
+                    {
+                      id: 1,
+                      nombre: 'Colegio Virtu Central',
+                      creadoEn: '2026-11-09T00:00:05.594Z',
+                      _count: { cursos: 2, usuarios: 2 }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      post: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Crear un nuevo colegio',
+        description: 'Crea una institución educativa en la base de datos.',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['nombre'],
+                properties: {
+                  nombre: { type: 'string', example: 'Liceo Bicentenario Virtu' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: 'Colegio creado exitosamente' }
+        }
+      }
+    },
+    '/admin/colegios/{id}': {
+      put: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Actualizar nombre de colegio',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['nombre'],
+                properties: { nombre: { type: 'string', example: 'Colegio Virtu Bicentenario' } }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Colegio actualizado' } }
+      },
+      delete: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Eliminar colegio',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Colegio eliminado' } }
+      }
+    },
+
+    '/admin/cursos': {
+      get: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Listar todos los cursos del sistema',
+        description: 'Muestra todos los cursos existentes, a qué colegio pertenecen y el número de alumnos inscritos.',
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Lista general de cursos.',
+            content: {
+              'application/json': {
+                example: {
+                  status: 'success',
+                  data: [
+                    {
+                      id: 1,
+                      nombre: '4to Medio A',
+                      colegioId: 1,
+                      colegio: { id: 1, nombre: 'Colegio Virtu Central' },
+                      _count: { estudiantes: 1, docentes: 1 }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      post: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Crear un nuevo curso',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['nombre', 'colegioId'],
+                properties: {
+                  nombre: { type: 'string', example: '3ro Medio A' },
+                  colegioId: { type: 'integer', example: 1 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Curso creado' } }
+      }
+    },
+    '/admin/cursos/{id}': {
+      put: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Actualizar nombre o colegio de curso',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  nombre: { type: 'string', example: '4to Medio A - 2026' },
+                  colegioId: { type: 'integer', example: 1 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Curso actualizado' } }
+      },
+      delete: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Eliminar curso',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Curso eliminado' } }
+      }
+    },
+
+    '/admin/contenidos': {
+      post: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Crear nueva materia o contenido académico',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['nombre', 'slug', 'resumen'],
+                properties: {
+                  nombre: { type: 'string', example: 'Filosofía' },
+                  slug: { type: 'string', example: 'filosofia' },
+                  resumen: { type: 'string', example: 'Estudio de la lógica, ética y pensamiento crítico.' },
+                  estaHabilitado: { type: 'boolean', default: true },
+                  orden: { type: 'integer', example: 7 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Contenido creado exitosamente' } }
+      }
+    },
+    '/admin/contenidos/{id}': {
+      put: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Actualizar materia (Habilitar / Deshabilitar o editar textos)',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  nombre: { type: 'string', example: 'Biología Celular' },
+                  resumen: { type: 'string', example: 'Actualización del resumen de la materia' },
+                  estaHabilitado: { type: 'boolean', example: false, description: 'Deshabilitar para ocultar a los estudiantes' },
+                  orden: { type: 'integer', example: 1 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Materia actualizada' } }
+      },
+      delete: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Eliminar materia (borra unidades y lecciones en cascada)',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Materia eliminada' } }
+      }
+    },
+
+    '/admin/unidades': {
+      post: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Crear nueva Unidad de Estudio',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['contenidoId', 'titulo'],
+                properties: {
+                  contenidoId: { type: 'integer', example: 1, description: 'ID de la materia' },
+                  titulo: { type: 'string', example: 'Unidad 2: Ecología y Ecosistemas' },
+                  descripcion: { type: 'string', example: 'Estudio de las cadenas tróficas y el medio ambiente' },
+                  orden: { type: 'integer', example: 2 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Unidad creada exitosamente' } }
+      }
+    },
+    '/admin/unidades/{id}': {
+      put: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Actualizar Unidad de Estudio',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  titulo: { type: 'string', example: 'Unidad 1: Genética Molecular Moderna' },
+                  descripcion: { type: 'string', example: 'Nueva descripción' },
+                  orden: { type: 'integer', example: 1 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Unidad actualizada' } }
+      },
+      delete: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Eliminar Unidad de Estudio (elimina sus lecciones asociadas)',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Unidad eliminada' } }
+      }
+    },
+
+    '/admin/lecciones': {
+      post: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Crear nueva Lección de Estudio',
+        description: 'Permite agregar una nueva lección. Soporta hasta 10.000 caracteres para definición y 2.000 para ejemplo.',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['unidadId', 'titulo', 'definicion', 'ejemplo'],
+                properties: {
+                  unidadId: { type: 'integer', example: 1 },
+                  titulo: { type: 'string', example: 'Transcripción del ARN' },
+                  definicion: { type: 'string', example: 'Proceso mediante el cual la información en una hebra de ADN se copia en una nueva molécula de ARN mensajero...' },
+                  ejemplo: { type: 'string', example: 'La ARN polimerasa se une a una región promotora del ADN...' },
+                  orden: { type: 'integer', example: 2 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Lección creada exitosamente' } }
+      }
+    },
+    '/admin/lecciones/{id}': {
+      put: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Actualizar Lección de Estudio',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  titulo: { type: 'string', example: 'Estructura molecular del ADN y ARN' },
+                  definicion: { type: 'string', example: 'Definición actualizada...' },
+                  ejemplo: { type: 'string', example: 'Ejemplo actualizado...' },
+                  orden: { type: 'integer', example: 1 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Lección actualizada' } }
+      },
+      delete: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Eliminar Lección de Estudio',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Lección eliminada' } }
+      }
+    },
+
+    '/admin/cuestionarios': {
+      post: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Crear o asignar cuestionario a una lección',
+        description: 'Crea el contenedor de evaluación para la lección especificada.',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['leccionId'],
+                properties: {
+                  leccionId: { type: 'integer', example: 1, description: 'ID de la lección' },
+                  tiempoLimiteSegundos: { type: 'integer', example: 300, default: 300 }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Cuestionario creado exitosamente' } }
+      }
+    },
+    '/admin/cuestionarios/{id}/preguntas': {
+      post: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Agregar pregunta con sus 4 opciones a un cuestionario',
+        description: `
+Agrega una pregunta al cuestionario.
+
+**Regla de validación (Req. 3.1.3):**
+* Debe incluir un array de exactamente **4 opciones**.
+* Exactamente **una sola opción** debe tener \`esCorrecta: true\`.
+        `,
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, description: 'ID del cuestionario', schema: { type: 'integer' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['enunciado', 'opciones'],
+                properties: {
+                  enunciado: { type: 'string', example: '¿Qué base nitrogenada sustituye a la timina en el ARN?' },
+                  orden: { type: 'integer', example: 1 },
+                  opciones: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      required: ['texto', 'esCorrecta'],
+                      properties: {
+                        texto: { type: 'string' },
+                        esCorrecta: { type: 'boolean' },
+                        explicacion: { type: 'string' }
+                      }
+                    },
+                    example: [
+                      { texto: 'Uracilo', esCorrecta: true, explicacion: 'El uracilo es la pirimidina que reemplaza a la timina en el ARN.' },
+                      { texto: 'Guanina', esCorrecta: false, explicacion: 'La guanina es una purina presente tanto en ADN como ARN.' },
+                      { texto: 'Citosina', esCorrecta: false, explicacion: 'La citosina se empareja con la guanina.' },
+                      { texto: 'Adenina', esCorrecta: false, explicacion: 'La adenina es común al ADN y ARN.' }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Pregunta agregada con sus 4 opciones' } }
+      }
+    },
+    '/admin/preguntas/{id}': {
+      delete: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Eliminar una pregunta y sus opciones asociadas',
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Pregunta eliminada' } }
+      }
+    },
+
+    '/admin/glosarios/{materia}': {
+      post: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Crear término en el glosario especializado de una materia',
+        description: `
+Crea un nuevo elemento en la tabla especializada de la materia (\`historia\`, \`fisica\`, \`ingles\`, \`biologia\`, \`calculo\`, \`quimica\`).
+
+**Ejemplos de payload según materia:**
+* **Historia:** \`{ "tematica": "Revolución", "datoHistorico": "Declaración de Derechos", "definicion": "Texto...", "lineaTiempo": "Agosto 1789", "esPersonaje": false, "fechaHistorica": "26 de Agosto de 1789", "ordenCronologico": 1789 }\`
+* **Biología:** \`{ "tematica": "Genética", "concepto": "Fenotipo", "definicion": "Expresión observable del genotipo...", "esFlashcard": true }\`
+* **Física:** \`{ "tematica": "Cinemática", "concepto": "Velocidad Instantánea", "definicion": "Límite de la velocidad media...", "linkVideo": "https://youtube.com/..." }\`
+* **Inglés:** \`{ "palabra": "Challenge", "definicion": "A call to take part in a contest...", "pronunciacion": "/ˈtʃalɪndʒ/", "tiempoVerbal": "Noun/Verb", "linkAudio": "https://assets.virtu.edu/audio/challenge.mp3", "ejemplo": "He accepted the challenge." }\`
+* **Cálculo:** \`{ "tematica": "Integrales", "titulo": "Teorema Fundamental del Cálculo", "definicion": "La derivación y la integración son operaciones inversas...", "renderizacion": "\\\\int_a^b f(x) dx = F(b) - F(a)" }\`
+* **Química:** \`{ "elementoQuimico": "Hidrógeno", "nombre": "Hidrógeno", "simbolo": "H", "numeroAtomico": 1, "clasificacion": "No metal", "formulaEjemplo": "H2" }\`
+        `,
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: 'materia',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', enum: ['historia', 'fisica', 'ingles', 'biologia', 'calculo', 'quimica'] }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { type: 'object' },
+              example: {
+                tematica: 'Genética',
+                concepto: 'Fenotipo',
+                definicion: 'Expresión física o rasgos observables determinados por la interacción entre genotipo y ambiente.',
+                esFlashcard: true
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Término de glosario creado exitosamente' } }
+      }
+    },
+    '/admin/glosarios/{materia}/{id}': {
+      delete: {
+        tags: ['7. Administración de Base de Datos (CRUDs)'],
+        summary: 'Eliminar término del glosario de una materia',
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'materia', in: 'path', required: true, schema: { type: 'string', enum: ['historia', 'fisica', 'ingles', 'biologia', 'calculo', 'quimica'] } },
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } }
+        ],
+        responses: { 200: { description: 'Término eliminado del glosario' } }
+      }
     }
   }
 };
